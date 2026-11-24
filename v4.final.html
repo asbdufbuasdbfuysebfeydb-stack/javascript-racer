@@ -1,90 +1,330 @@
 <!DOCTYPE html> 
-
-<html>
+<html lang="en">
 <head>
-  <title>Javascript Racer - v4 (final)</title>
+  <title>Javascript Racer - v4 (Retro Arcade Edition)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <link href="common.css" rel="stylesheet" type="text/css" />
+  <style>
+    /* =====================================================================
+       RETRO 16-BIT ARCADE GUI OVERRIDES
+       ===================================================================== */
+    :root {
+      --retro-bg: #12101c;
+      --retro-panel: rgba(22, 18, 38, 0.92);
+      --retro-border: #ff2a6d;
+      --retro-accent: #05d9e8;
+      --retro-gold: #f9c80e;
+      --retro-text: #d1f7ff;
+    }
+
+    body {
+      background-color: var(--retro-bg);
+      color: var(--retro-text);
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* Arcade Cabinet Wrapper */
+    #arcade-wrapper {
+      position: relative;
+      display: inline-block;
+      border: 4px solid var(--retro-border);
+      box-shadow: 0 0 0 4px #000, 0 0 24px rgba(255, 42, 109, 0.45);
+      background: #000;
+    }
+
+    #racer {
+      position: relative;
+      margin: 0 !important;
+      border: none !important;
+    }
+
+    #canvas {
+      display: block;
+      image-rendering: pixelated; /* Crisp retro scaling */
+    }
+
+    /* Retro Digital HUD */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+      border-bottom: 2px solid rgba(5, 217, 232, 0.3);
+      font-weight: bold;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 0px #000;
+      pointer-events: none;
+    }
+
+    #hud .hud {
+      background: rgba(18, 16, 28, 0.8);
+      border: 2px solid var(--retro-accent);
+      padding: 4px 10px;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    #hud .value {
+      color: var(--retro-gold);
+      font-size: 17px;
+    }
+
+    #hud .fastest {
+      border-color: var(--retro-gold);
+      color: var(--retro-gold);
+    }
+
+    /* Toggle Button for Settings Drawer */
+    #toggle-gui-btn {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      z-index: 25;
+      background: var(--retro-panel);
+      color: var(--retro-accent);
+      border: 2px solid var(--retro-accent);
+      font-family: inherit;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 3px 3px 0px #000;
+    }
+
+    #toggle-gui-btn:hover {
+      background: var(--retro-accent);
+      color: #000;
+    }
+
+    /* Collapsible Retro Control Panel */
+    #controls {
+      position: absolute;
+      top: 52px;
+      left: 12px;
+      z-index: 20;
+      width: 290px;
+      background: var(--retro-panel);
+      border: 3px solid var(--retro-accent);
+      box-shadow: 5px 5px 0px #000;
+      padding: 10px 12px;
+      font-size: 12px;
+      border-collapse: separate;
+      border-spacing: 0 6px;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    #controls.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+    }
+
+    #controls a {
+      color: var(--retro-gold);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    #controls a:hover {
+      text-decoration: underline;
+      color: #fff;
+    }
+
+    #controls th {
+      text-align: left;
+      color: var(--retro-text);
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 11px;
+      padding-right: 8px;
+    }
+
+    #controls th span {
+      color: var(--retro-gold);
+    }
+
+    /* Retro Form Elements */
+    #controls select,
+    #controls button.retro-btn {
+      width: 100%;
+      background: #0b0a12;
+      color: var(--retro-accent);
+      border: 2px solid var(--retro-accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    #controls button.retro-btn:hover {
+      background: var(--retro-border);
+      border-color: var(--retro-border);
+      color: #fff;
+    }
+
+    #controls input[type='range'] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #0b0a12;
+      border: 1px solid var(--retro-accent);
+      outline: none;
+    }
+
+    #controls input[type='range']::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 16px;
+      background: var(--retro-border);
+      border: 1px solid #fff;
+      cursor: pointer;
+    }
+
+    #controls input[type='range']::-moz-range-thumb {
+      width: 12px;
+      height: 16px;
+      background: var(--retro-border);
+      border: 1px solid #fff;
+      cursor: pointer;
+    }
+
+    /* Footer Instructions & Mute */
+    #bottom-bar {
+      width: 100%;
+      max-width: 1024px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #9baec8;
+    }
+
+    #bottom-bar b {
+      color: var(--retro-gold);
+    }
+
+    #fps {
+      color: var(--retro-gold);
+      font-weight: bold;
+    }
+  </style>
 </head> 
 
 <body> 
 
-  <table id="controls">
-    <tr>
-      <td colspan="2">
-        <a href='v1.straight.html'>straight</a> |
-        <a href='v2.curves.html'>curves</a>     |
-        <a href='v3.hills.html'>hills</a>       |
-        <a href='v4.final.html'>final</a>
-      </td>
-    </tr>
-    <tr><td id="fps" colspan="2" align="right"></td></tr>
-    <tr>
-      <th><label for="resolution">Resolution :</label></th>
-      <td>
-        <select id="resolution" style="width:100%">
-          <option value='fine'>Fine (1280x960)</option>
-          <option selected value='high'>High (1024x768)</option>
-          <option value='medium'>Medium (640x480)</option>
-          <option value='low'>Low (480x360)</option>
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <th><label for="lanes">Lanes :</label></th>
-      <td>
-        <select id="lanes">
-          <option>1</option>
-          <option>2</option>
-          <option selected>3</option>
-          <option>4</option>
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <th><label for="roadWidth">Road Width (<span id="currentRoadWidth"></span>) :</label></th>
-      <td><input id="roadWidth" type='range' min='500' max='3000' title="integer (500-3000)"></td>
-    </tr>
-    <tr>
-      <th><label for="cameraHeight">CameraHeight (<span id="currentCameraHeight"></span>) :</label></th>
-      <td><input id="cameraHeight" type='range' min='500' max='5000' title="integer (500-5000)"></td>
-    </tr>
-    <tr>
-      <th><label for="drawDistance">Draw Distance (<span id="currentDrawDistance"></span>) :</label></th>
-      <td><input id="drawDistance" type='range' min='100' max='500' title="integer (100-500)"></td>
-    </tr>
-    <tr>
-      <th><label for="fieldOfView">Field of View (<span id="currentFieldOfView"></span>) :</label></th>
-      <td><input id="fieldOfView" type='range' min='80' max='140' title="integer (80-140)"></td>
-    </tr>
-    <tr>
-      <th><label for="fogDensity">Fog Density (<span id="currentFogDensity"></span>) :</label></th>
-      <td><input id="fogDensity" type='range' min='0' max='50' title="integer (0-50)"></td>
-    </tr>
-  </table>
+  <div id="arcade-wrapper">
+    <button id="toggle-gui-btn" title="Toggle Settings Menu [C]">[C] Tweak Setup</button>
 
-  <div id='instructions'>
-    <p>Use the <b>arrow keys</b> to drive the car.</p>
+    <table id="controls">
+      <tr>
+        <td colspan="2" style="border-bottom: 1px dashed var(--retro-accent); padding-bottom: 6px;">
+          STAGE: 
+          <a href='v1.straight.html'>1:STR</a> |
+          <a href='v2.curves.html'>2:CRV</a> |
+          <a href='v3.hills.html'>3:HIL</a> |
+          <a href='v4.final.html' style="color:var(--retro-border);">4:MAX</a>
+        </td>
+      </tr>
+      <tr>
+        <th>PERF MONITOR:</th>
+        <td id="fps" align="right"></td>
+      </tr>
+      <tr>
+        <th><label for="resolution">Resolution:</label></th>
+        <td>
+          <select id="resolution">
+            <option value='fine'>Fine (1280x960)</option>
+            <option selected value='high'>High (1024x768)</option>
+            <option value='medium'>Medium (640x480)</option>
+            <option value='low'>Low (480x360)</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th><label for="lanes">Lanes:</label></th>
+        <td>
+          <select id="lanes">
+            <option>1</option>
+            <option>2</option>
+            <option selected>3</option>
+            <option>4</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th><label for="totalCars">Traffic (<span id="currentTotalCars"></span>):</label></th>
+        <td><input id="totalCars" type='range' min='0' max='200' step='10' title="Set to 0 to remove all cars"></td>
+      </tr>
+      <tr>
+        <th>Solo Mode:</th>
+        <td><button id="toggleCarsBtn" type="button" class="retro-btn">Remove All Cars</button></td>
+      </tr>
+      <tr>
+        <th><label for="roadWidth">Road Width (<span id="currentRoadWidth"></span>):</label></th>
+        <td><input id="roadWidth" type='range' min='500' max='3000'></td>
+      </tr>
+      <tr>
+        <th><label for="cameraHeight">Cam Height (<span id="currentCameraHeight"></span>):</label></th>
+        <td><input id="cameraHeight" type='range' min='500' max='5000'></td>
+      </tr>
+      <tr>
+        <th><label for="drawDistance">Draw Dist (<span id="currentDrawDistance"></span>):</label></th>
+        <td><input id="drawDistance" type='range' min='100' max='500'></td>
+      </tr>
+      <tr>
+        <th><label for="fieldOfView">FOV (<span id="currentFieldOfView"></span>):</label></th>
+        <td><input id="fieldOfView" type='range' min='80' max='140'></td>
+      </tr>
+      <tr>
+        <th><label for="fogDensity">Fog (<span id="currentFogDensity"></span>):</label></th>
+        <td><input id="fogDensity" type='range' min='0' max='50'></td>
+      </tr>
+    </table>
+
+    <div id="racer">
+      <div id="hud">
+        <span id="speed"            class="hud">SPD <span id="speed_value" class="value">0</span> MPH</span>
+        <span id="current_lap_time" class="hud">TIME <span id="current_lap_time_value" class="value">0.0</span></span> 
+        <span id="last_lap_time"    class="hud">LAST <span id="last_lap_time_value" class="value">0.0</span></span>
+        <span id="fast_lap_time"    class="hud">BEST <span id="fast_lap_time_value" class="value">0.0</span></span>
+      </div>
+      <canvas id="canvas">
+        Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+      </canvas>
+      Loading...
+    </div>
   </div>
 
-  <div id="racer">
-    <div id="hud">
-      <span id="speed"            class="hud"><span id="speed_value" class="value">0</span> mph</span>
-      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span> 
-      <span id="last_lap_time"    class="hud">Last Lap: <span id="last_lap_time_value" class="value">0.0</span></span>
-      <span id="fast_lap_time"    class="hud">Fastest Lap: <span id="fast_lap_time_value" class="value">0.0</span></span>
+  <div id="bottom-bar">
+    <div id='instructions'>
+      DRIVE: <b>ARROWS / WASD</b> &nbsp;|&nbsp; SETUP MENU: <b>[C]</b> &nbsp;|&nbsp; TRAFFIC TOGGLE: <b>[T]</b>
     </div>
-    <canvas id="canvas">
-      Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
-    </canvas>
-    Loading...
+    <div>
+      <span id="mute"></span>
+    </div>
   </div>
 
   <audio id='music'>
     <source src="music/racer.ogg">
     <source src="music/racer.mp3">
   </audio>
-  <span id="mute"></span>
 
   <script src="stats.js"></script>
   <script src="common.js"></script>
@@ -95,42 +335,44 @@
     var width          = 1024;                    // logical canvas width
     var height         = 768;                     // logical canvas height
     var centrifugal    = 0.3;                     // centrifugal force multiplier when going around curves
-    var offRoadDecel   = 0.99;                    // speed multiplier when off road (e.g. you lose 2% speed each update frame)
-    var skySpeed       = 0.001;                   // background sky layer scroll speed when going around curve (or up hill)
-    var hillSpeed      = 0.002;                   // background hill layer scroll speed when going around curve (or up hill)
-    var treeSpeed      = 0.003;                   // background tree layer scroll speed when going around curve (or up hill)
+    var skySpeed       = 0.001;                   // background sky layer scroll speed
+    var hillSpeed      = 0.002;                   // background hill layer scroll speed
+    var treeSpeed      = 0.003;                   // background tree layer scroll speed
     var skyOffset      = 0;                       // current sky scroll offset
     var hillOffset     = 0;                       // current hill scroll offset
     var treeOffset     = 0;                       // current tree scroll offset
     var segments       = [];                      // array of road segments
+    var segmentCount   = 0;                       // cached length of segments array
     var cars           = [];                      // array of cars on the road
     var stats          = Game.stats('fps');       // mr.doobs FPS counter
     var canvas         = Dom.get('canvas');       // our canvas...
-    var ctx            = canvas.getContext('2d'); // ...and its drawing context
-    var background     = null;                    // our background image (loaded below)
-    var sprites        = null;                    // our spritesheet (loaded below)
-    var resolution     = null;                    // scaling factor to provide resolution independence (computed)
-    var roadWidth      = 2000;                    // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+    var ctx            = canvas.getContext('2d', { alpha: false }); // disabled alpha for faster rendering
+    var background     = null;                    // our background image
+    var sprites        = null;                    // our spritesheet
+    var resolution     = null;                    // scaling factor
+    var roadWidth      = 2000;                    // half the road's width
     var segmentLength  = 200;                     // length of a single segment
-    var rumbleLength   = 3;                       // number of segments per red/white rumble strip
-    var trackLength    = null;                    // z length of entire track (computed)
+    var invSegLength   = 1 / segmentLength;       // precalculated inverse for faster division
+    var rumbleLength   = 3;                       // number of segments per rumble strip
+    var trackLength    = null;                    // z length of entire track
     var lanes          = 3;                       // number of lanes
     var fieldOfView    = 100;                     // angle (degrees) for field of view
     var cameraHeight   = 1000;                    // z height of camera
-    var cameraDepth    = null;                    // z distance camera is from screen (computed)
+    var cameraDepth    = null;                    // z distance camera is from screen
     var drawDistance   = 300;                     // number of segments to draw
-    var playerX        = 0;                       // player x offset from center of road (-1 to 1 to stay independent of roadWidth)
-    var playerZ        = null;                    // player relative z distance from camera (computed)
+    var playerX        = 0;                       // player x offset (-1 to 1)
+    var playerZ        = null;                    // player relative z distance from camera
     var fogDensity     = 5;                       // exponential fog density
-    var position       = 0;                       // current camera Z position (add playerZ to get player's absolute Z position)
+    var position       = 0;                       // current camera Z position
     var speed          = 0;                       // current speed
-    var maxSpeed       = segmentLength/step;      // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
-    var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
+    var maxSpeed       = segmentLength/step;      // top speed
+    var accel          =  maxSpeed/5;             // acceleration rate
     var breaking       = -maxSpeed;               // deceleration rate when braking
-    var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
-    var offRoadDecel   = -maxSpeed/2;             // off road deceleration is somewhere in between
-    var offRoadLimit   =  maxSpeed/4;             // limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
+    var decel          = -maxSpeed/5;             // natural deceleration rate
+    var offRoadDecel   = -maxSpeed/2;             // off road deceleration
+    var offRoadLimit   =  maxSpeed/4;             // off road speed floor
     var totalCars      = 200;                     // total number of cars on the road
+    var savedCarCount  = 200;                     // remembers previous car count when toggling
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
 
@@ -144,31 +386,33 @@
       current_lap_time: { value: null, dom: Dom.get('current_lap_time_value') },
       last_lap_time:    { value: null, dom: Dom.get('last_lap_time_value')    },
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
-    }
+    };
 
     //=========================================================================
     // UPDATE THE GAME WORLD
     //=========================================================================
 
     function update(dt) {
-
       var n, car, carW, sprite, spriteW;
-      var playerSegment = findSegment(position+playerZ);
+      var playerSegment = findSegment(position + playerZ);
       var playerW       = SPRITES.PLAYER_STRAIGHT.w * SPRITES.SCALE;
-      var speedPercent  = speed/maxSpeed;
-      var dx            = dt * 2 * speedPercent; // at top speed, should be able to cross from left to right (-1 to 1) in 1 second
+      var speedPercent  = speed / maxSpeed;
+      var dx            = dt * 2 * speedPercent;
       var startPosition = position;
 
-      updateCars(dt, playerSegment, playerW);
+      // Only run traffic AI if cars exist
+      if (cars.length > 0) {
+        updateCars(dt, playerSegment, playerW);
+      }
 
       position = Util.increase(position, dt * speed, trackLength);
 
       if (keyLeft)
-        playerX = playerX - dx;
+        playerX -= dx;
       else if (keyRight)
-        playerX = playerX + dx;
+        playerX += dx;
 
-      playerX = playerX - (dx * speedPercent * playerSegment.curve * centrifugal);
+      playerX -= (dx * speedPercent * playerSegment.curve * centrifugal);
 
       if (keyFaster)
         speed = Util.accelerate(speed, accel, dt);
@@ -177,41 +421,45 @@
       else
         speed = Util.accelerate(speed, decel, dt);
 
-
       if ((playerX < -1) || (playerX > 1)) {
-
         if (speed > offRoadLimit)
           speed = Util.accelerate(speed, offRoadDecel, dt);
 
-        for(n = 0 ; n < playerSegment.sprites.length ; n++) {
-          sprite  = playerSegment.sprites[n];
+        var segSprites = playerSegment.sprites;
+        for (n = 0; n < segSprites.length; n++) {
+          sprite  = segSprites[n];
           spriteW = sprite.source.w * SPRITES.SCALE;
           if (Util.overlap(playerX, playerW, sprite.offset + spriteW/2 * (sprite.offset > 0 ? 1 : -1), spriteW)) {
-            speed = maxSpeed/5;
-            position = Util.increase(playerSegment.p1.world.z, -playerZ, trackLength); // stop in front of sprite (at front of segment)
+            speed = maxSpeed / 5;
+            position = Util.increase(playerSegment.p1.world.z, -playerZ, trackLength);
             break;
           }
         }
       }
 
-      for(n = 0 ; n < playerSegment.cars.length ; n++) {
-        car  = playerSegment.cars[n];
-        carW = car.sprite.w * SPRITES.SCALE;
-        if (speed > car.speed) {
-          if (Util.overlap(playerX, playerW, car.offset, carW, 0.8)) {
-            speed    = car.speed * (car.speed/speed);
-            position = Util.increase(car.z, -playerZ, trackLength);
-            break;
+      // Skip car collision loop if no cars are on the road
+      var segCars = playerSegment.cars;
+      if (segCars.length > 0) {
+        for (n = 0; n < segCars.length; n++) {
+          car  = segCars[n];
+          carW = car.sprite.w * SPRITES.SCALE;
+          if (speed > car.speed) {
+            if (Util.overlap(playerX, playerW, car.offset, carW, 0.8)) {
+              speed    = car.speed * (car.speed / speed);
+              position = Util.increase(car.z, -playerZ, trackLength);
+              break;
+            }
           }
         }
       }
 
-      playerX = Util.limit(playerX, -3, 3);     // dont ever let it go too far out of bounds
-      speed   = Util.limit(speed, 0, maxSpeed); // or exceed maxSpeed
+      playerX = Util.limit(playerX, -3, 3);
+      speed   = Util.limit(speed, 0, maxSpeed);
 
-      skyOffset  = Util.increase(skyOffset,  skySpeed  * playerSegment.curve * (position-startPosition)/segmentLength, 1);
-      hillOffset = Util.increase(hillOffset, hillSpeed * playerSegment.curve * (position-startPosition)/segmentLength, 1);
-      treeOffset = Util.increase(treeOffset, treeSpeed * playerSegment.curve * (position-startPosition)/segmentLength, 1);
+      var posDeltaSeg = (position - startPosition) * invSegLength;
+      skyOffset  = Util.increase(skyOffset,  skySpeed  * playerSegment.curve * posDeltaSeg, 1);
+      hillOffset = Util.increase(hillOffset, hillSpeed * playerSegment.curve * posDeltaSeg, 1);
+      treeOffset = Util.increase(treeOffset, treeSpeed * playerSegment.curve * posDeltaSeg, 1);
 
       if (position > playerZ) {
         if (currentLapTime && (startPosition < playerZ)) {
@@ -222,90 +470,83 @@
             updateHud('fast_lap_time', formatTime(lastLapTime));
             Dom.addClassName('fast_lap_time', 'fastest');
             Dom.addClassName('last_lap_time', 'fastest');
-          }
-          else {
+          } else {
             Dom.removeClassName('fast_lap_time', 'fastest');
             Dom.removeClassName('last_lap_time', 'fastest');
           }
           updateHud('last_lap_time', formatTime(lastLapTime));
           Dom.show('last_lap_time');
-        }
-        else {
+        } else {
           currentLapTime += dt;
         }
       }
 
-      updateHud('speed',            5 * Math.round(speed/500));
+      updateHud('speed',            5 * Math.round(speed / 500));
       updateHud('current_lap_time', formatTime(currentLapTime));
     }
 
     //-------------------------------------------------------------------------
 
     function updateCars(dt, playerSegment, playerW) {
-      var n, car, oldSegment, newSegment;
-      for(n = 0 ; n < cars.length ; n++) {
+      var n, car, oldSegment, newSegment, index;
+      var len = cars.length;
+      for (n = 0; n < len; n++) {
         car         = cars[n];
         oldSegment  = findSegment(car.z);
         car.offset  = car.offset + updateCarOffset(car, oldSegment, playerSegment, playerW);
         car.z       = Util.increase(car.z, dt * car.speed, trackLength);
-        car.percent = Util.percentRemaining(car.z, segmentLength); // useful for interpolation during rendering phase
+        car.percent = Util.percentRemaining(car.z, segmentLength);
         newSegment  = findSegment(car.z);
-        if (oldSegment != newSegment) {
+        if (oldSegment !== newSegment) {
           index = oldSegment.cars.indexOf(car);
-          oldSegment.cars.splice(index, 1);
+          if (index > -1) oldSegment.cars.splice(index, 1);
           newSegment.cars.push(car);
         }
       }
     }
 
     function updateCarOffset(car, carSegment, playerSegment, playerW) {
+      var i, j, dir, segment, otherCar, otherCarW, segCars;
+      var lookahead = 20;
+      var carW = car.sprite.w * SPRITES.SCALE;
 
-      var i, j, dir, segment, otherCar, otherCarW, lookahead = 20, carW = car.sprite.w * SPRITES.SCALE;
-
-      // optimization, dont bother steering around other cars when 'out of sight' of the player
-      if ((carSegment.index - playerSegment.index) > drawDistance)
+      // Optimization: skip steering logic if far ahead of player
+      var segDiff = carSegment.index - playerSegment.index;
+      if (segDiff < 0) segDiff += segmentCount;
+      if (segDiff > drawDistance)
         return 0;
 
-      for(i = 1 ; i < lookahead ; i++) {
-        segment = segments[(carSegment.index+i)%segments.length];
+      for (i = 1; i < lookahead; i++) {
+        segment = segments[(carSegment.index + i) % segmentCount];
 
-        if ((segment === playerSegment) && (car.speed > speed) && (Util.overlap(playerX, playerW, car.offset, carW, 1.2))) {
-          if (playerX > 0.5)
-            dir = -1;
-          else if (playerX < -0.5)
-            dir = 1;
-          else
-            dir = (car.offset > playerX) ? 1 : -1;
-          return dir * 1/i * (car.speed-speed)/maxSpeed; // the closer the cars (smaller i) and the greated the speed ratio, the larger the offset
+        if ((segment === playerSegment) && (car.speed > speed) && Util.overlap(playerX, playerW, car.offset, carW, 1.2)) {
+          if (playerX > 0.5)       dir = -1;
+          else if (playerX < -0.5) dir = 1;
+          else                     dir = (car.offset > playerX) ? 1 : -1;
+          return dir * (1 / i) * (car.speed - speed) / maxSpeed;
         }
 
-        for(j = 0 ; j < segment.cars.length ; j++) {
-          otherCar  = segment.cars[j];
+        segCars = segment.cars;
+        for (j = 0; j < segCars.length; j++) {
+          otherCar  = segCars[j];
           otherCarW = otherCar.sprite.w * SPRITES.SCALE;
           if ((car.speed > otherCar.speed) && Util.overlap(car.offset, carW, otherCar.offset, otherCarW, 1.2)) {
-            if (otherCar.offset > 0.5)
-              dir = -1;
-            else if (otherCar.offset < -0.5)
-              dir = 1;
-            else
-              dir = (car.offset > otherCar.offset) ? 1 : -1;
-            return dir * 1/i * (car.speed-otherCar.speed)/maxSpeed;
+            if (otherCar.offset > 0.5)       dir = -1;
+            else if (otherCar.offset < -0.5) dir = 1;
+            else                             dir = (car.offset > otherCar.offset) ? 1 : -1;
+            return dir * (1 / i) * (car.speed - otherCar.speed) / maxSpeed;
           }
         }
       }
 
-      // if no cars ahead, but I have somehow ended up off road, then steer back on
-      if (car.offset < -0.9)
-        return 0.1;
-      else if (car.offset > 0.9)
-        return -0.1;
-      else
-        return 0;
+      if (car.offset < -0.9)      return 0.1;
+      else if (car.offset > 0.9)  return -0.1;
+      return 0;
     }
 
     //-------------------------------------------------------------------------
 
-    function updateHud(key, value) { // accessing DOM can be slow, so only do it if value has changed
+    function updateHud(key, value) {
       if (hud[key].value !== value) {
         hud[key].value = value;
         Dom.set(hud[key].dom, value);
@@ -313,7 +554,7 @@
     }
 
     function formatTime(dt) {
-      var minutes = Math.floor(dt/60);
+      var minutes = Math.floor(dt / 60);
       var seconds = Math.floor(dt - (minutes * 60));
       var tenths  = Math.floor(10 * (dt - Math.floor(dt)));
       if (minutes > 0)
@@ -327,41 +568,42 @@
     //=========================================================================
 
     function render() {
-
       var baseSegment   = findSegment(position);
       var basePercent   = Util.percentRemaining(position, segmentLength);
-      var playerSegment = findSegment(position+playerZ);
-      var playerPercent = Util.percentRemaining(position+playerZ, segmentLength);
+      var playerSegment = findSegment(position + playerZ);
+      var playerPercent = Util.percentRemaining(position + playerZ, segmentLength);
       var playerY       = Util.interpolate(playerSegment.p1.world.y, playerSegment.p2.world.y, playerPercent);
       var maxy          = height;
 
       var x  = 0;
-      var dx = - (baseSegment.curve * basePercent);
-
-      ctx.clearRect(0, 0, width, height);
+      var dx = -(baseSegment.curve * basePercent);
 
       Render.background(ctx, background, width, height, BACKGROUND.SKY,   skyOffset,  resolution * skySpeed  * playerY);
       Render.background(ctx, background, width, height, BACKGROUND.HILLS, hillOffset, resolution * hillSpeed * playerY);
       Render.background(ctx, background, width, height, BACKGROUND.TREES, treeOffset, resolution * treeSpeed * playerY);
 
       var n, i, segment, car, sprite, spriteScale, spriteX, spriteY;
+      var baseIndex = baseSegment.index;
+      var playerXWorld = playerX * roadWidth;
+      var camYWorld = playerY + cameraHeight;
+      var halfWidth = width * 0.5;
 
-      for(n = 0 ; n < drawDistance ; n++) {
-
-        segment        = segments[(baseSegment.index + n) % segments.length];
-        segment.looped = segment.index < baseSegment.index;
-        segment.fog    = Util.exponentialFog(n/drawDistance, fogDensity);
+      for (n = 0; n < drawDistance; n++) {
+        segment        = segments[(baseIndex + n) % segmentCount];
+        segment.looped = segment.index < baseIndex;
+        segment.fog    = Util.exponentialFog(n / drawDistance, fogDensity);
         segment.clip   = maxy;
 
-        Util.project(segment.p1, (playerX * roadWidth) - x,      playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
-        Util.project(segment.p2, (playerX * roadWidth) - x - dx, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
+        var zOffset = position - (segment.looped ? trackLength : 0);
+        Util.project(segment.p1, playerXWorld - x,      camYWorld, zOffset, cameraDepth, width, height, roadWidth);
+        Util.project(segment.p2, playerXWorld - x - dx, camYWorld, zOffset, cameraDepth, width, height, roadWidth);
 
-        x  = x + dx;
-        dx = dx + segment.curve;
+        x  += dx;
+        dx += segment.curve;
 
-        if ((segment.p1.camera.z <= cameraDepth)         || // behind us
-            (segment.p2.screen.y >= segment.p1.screen.y) || // back face cull
-            (segment.p2.screen.y >= maxy))                  // clip by (already rendered) hill
+        if ((segment.p1.camera.z <= cameraDepth)         ||
+            (segment.p2.screen.y >= segment.p1.screen.y) ||
+            (segment.p2.screen.y >= maxy))
           continue;
 
         Render.segment(ctx, width, lanes,
@@ -377,31 +619,34 @@
         maxy = segment.p1.screen.y;
       }
 
-      for(n = (drawDistance-1) ; n > 0 ; n--) {
-        segment = segments[(baseSegment.index + n) % segments.length];
+      for (n = (drawDistance - 1); n > 0; n--) {
+        segment = segments[(baseIndex + n) % segmentCount];
 
-        for(i = 0 ; i < segment.cars.length ; i++) {
-          car         = segment.cars[i];
-          sprite      = car.sprite;
+        // Render traffic cars if any exist on this segment
+        var segCars = segment.cars;
+        for (i = 0; i < segCars.length; i++) {
+          car         = segCars[i];
           spriteScale = Util.interpolate(segment.p1.screen.scale, segment.p2.screen.scale, car.percent);
-          spriteX     = Util.interpolate(segment.p1.screen.x,     segment.p2.screen.x,     car.percent) + (spriteScale * car.offset * roadWidth * width/2);
+          spriteX     = Util.interpolate(segment.p1.screen.x,     segment.p2.screen.x,     car.percent) + (spriteScale * car.offset * roadWidth * halfWidth);
           spriteY     = Util.interpolate(segment.p1.screen.y,     segment.p2.screen.y,     car.percent);
           Render.sprite(ctx, width, height, resolution, roadWidth, sprites, car.sprite, spriteScale, spriteX, spriteY, -0.5, -1, segment.clip);
         }
 
-        for(i = 0 ; i < segment.sprites.length ; i++) {
-          sprite      = segment.sprites[i];
+        // Render roadside sprites
+        var segSprites = segment.sprites;
+        for (i = 0; i < segSprites.length; i++) {
+          sprite      = segSprites[i];
           spriteScale = segment.p1.screen.scale;
-          spriteX     = segment.p1.screen.x + (spriteScale * sprite.offset * roadWidth * width/2);
+          spriteX     = segment.p1.screen.x + (spriteScale * sprite.offset * roadWidth * halfWidth);
           spriteY     = segment.p1.screen.y;
           Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite.source, spriteScale, spriteX, spriteY, (sprite.offset < 0 ? -1 : 0), -1, segment.clip);
         }
 
-        if (segment == playerSegment) {
-          Render.player(ctx, width, height, resolution, roadWidth, sprites, speed/maxSpeed,
-                        cameraDepth/playerZ,
-                        width/2,
-                        (height/2) - (cameraDepth/playerZ * Util.interpolate(playerSegment.p1.camera.y, playerSegment.p2.camera.y, playerPercent) * height/2),
+        if (segment === playerSegment) {
+          Render.player(ctx, width, height, resolution, roadWidth, sprites, speed / maxSpeed,
+                        cameraDepth / playerZ,
+                        halfWidth,
+                        (height * 0.5) - (cameraDepth / playerZ * Util.interpolate(playerSegment.p1.camera.y, playerSegment.p2.camera.y, playerPercent) * height * 0.5),
                         speed * (keyLeft ? -1 : keyRight ? 1 : 0),
                         playerSegment.p2.world.y - playerSegment.p1.world.y);
         }
@@ -409,25 +654,25 @@
     }
 
     function findSegment(z) {
-      return segments[Math.floor(z/segmentLength) % segments.length]; 
+      return segments[Math.floor(z * invSegLength) % segmentCount]; 
     }
 
     //=========================================================================
     // BUILD ROAD GEOMETRY
     //=========================================================================
 
-    function lastY() { return (segments.length == 0) ? 0 : segments[segments.length-1].p2.world.y; }
+    function lastY() { return (segments.length === 0) ? 0 : segments[segments.length - 1].p2.world.y; }
 
     function addSegment(curve, y) {
       var n = segments.length;
       segments.push({
           index: n,
-             p1: { world: { y: lastY(), z:  n   *segmentLength }, camera: {}, screen: {} },
-             p2: { world: { y: y,       z: (n+1)*segmentLength }, camera: {}, screen: {} },
+             p1: { world: { y: lastY(), z:  n      * segmentLength }, camera: {}, screen: {} },
+             p2: { world: { y: y,       z: (n + 1) * segmentLength }, camera: {}, screen: {} },
           curve: curve,
         sprites: [],
            cars: [],
-          color: Math.floor(n/rumbleLength)%2 ? COLORS.DARK : COLORS.LIGHT
+          color: Math.floor(n / rumbleLength) % 2 ? COLORS.DARK : COLORS.LIGHT
       });
     }
 
@@ -439,12 +684,12 @@
       var startY   = lastY();
       var endY     = startY + (Util.toInt(y, 0) * segmentLength);
       var n, total = enter + hold + leave;
-      for(n = 0 ; n < enter ; n++)
-        addSegment(Util.easeIn(0, curve, n/enter), Util.easeInOut(startY, endY, n/total));
-      for(n = 0 ; n < hold  ; n++)
-        addSegment(curve, Util.easeInOut(startY, endY, (enter+n)/total));
-      for(n = 0 ; n < leave ; n++)
-        addSegment(Util.easeInOut(curve, 0, n/leave), Util.easeInOut(startY, endY, (enter+hold+n)/total));
+      for (n = 0; n < enter; n++)
+        addSegment(Util.easeIn(0, curve, n / enter), Util.easeInOut(startY, endY, n / total));
+      for (n = 0; n < hold; n++)
+        addSegment(curve, Util.easeInOut(startY, endY, (enter + n) / total));
+      for (n = 0; n < leave; n++)
+        addSegment(Util.easeInOut(curve, 0, n / leave), Util.easeInOut(startY, endY, (enter + hold + n) / total));
     }
 
     var ROAD = {
@@ -474,11 +719,11 @@
     function addLowRollingHills(num, height) {
       num    = num    || ROAD.LENGTH.SHORT;
       height = height || ROAD.HILL.LOW;
-      addRoad(num, num, num,  0,                height/2);
+      addRoad(num, num, num,  0,                height / 2);
       addRoad(num, num, num,  0,               -height);
       addRoad(num, num, num,  ROAD.CURVE.EASY,  height);
       addRoad(num, num, num,  0,                0);
-      addRoad(num, num, num, -ROAD.CURVE.EASY,  height/2);
+      addRoad(num, num, num, -ROAD.CURVE.EASY,  height / 2);
       addRoad(num, num, num,  0,                0);
     }
 
@@ -503,7 +748,7 @@
 
     function addDownhillToEnd(num) {
       num = num || 200;
-      addRoad(num, num, num, -ROAD.CURVE.EASY, -lastY()/segmentLength);
+      addRoad(num, num, num, -ROAD.CURVE.EASY, -lastY() / segmentLength);
     }
 
     function resetRoad() {
@@ -515,7 +760,7 @@
       addCurve(ROAD.LENGTH.MEDIUM, ROAD.CURVE.MEDIUM, ROAD.HILL.LOW);
       addBumps();
       addLowRollingHills();
-      addCurve(ROAD.LENGTH.LONG*2, ROAD.CURVE.MEDIUM, ROAD.HILL.MEDIUM);
+      addCurve(ROAD.LENGTH.LONG * 2, ROAD.CURVE.MEDIUM, ROAD.HILL.MEDIUM);
       addStraight();
       addHill(ROAD.LENGTH.MEDIUM, ROAD.HILL.HIGH);
       addSCurves();
@@ -528,15 +773,16 @@
       addSCurves();
       addDownhillToEnd();
 
+      segmentCount = segments.length;
+      trackLength  = segmentCount * segmentLength;
+
       resetSprites();
       resetCars();
 
       segments[findSegment(playerZ).index + 2].color = COLORS.START;
       segments[findSegment(playerZ).index + 3].color = COLORS.START;
-      for(var n = 0 ; n < rumbleLength ; n++)
-        segments[segments.length-1-n].color = COLORS.FINISH;
-
-      trackLength = segments.length * segmentLength;
+      for (var n = 0; n < rumbleLength; n++)
+        segments[segmentCount - 1 - n].color = COLORS.FINISH;
     }
 
     function resetSprites() {
@@ -552,50 +798,55 @@
       addSprite(160, SPRITES.BILLBOARD04, -1);
       addSprite(180, SPRITES.BILLBOARD05, -1);
 
-      addSprite(240,                  SPRITES.BILLBOARD07, -1.2);
-      addSprite(240,                  SPRITES.BILLBOARD06,  1.2);
-      addSprite(segments.length - 25, SPRITES.BILLBOARD07, -1.2);
-      addSprite(segments.length - 25, SPRITES.BILLBOARD06,  1.2);
+      addSprite(240,                SPRITES.BILLBOARD07, -1.2);
+      addSprite(240,                SPRITES.BILLBOARD06,  1.2);
+      addSprite(segmentCount - 25,  SPRITES.BILLBOARD07, -1.2);
+      addSprite(segmentCount - 25,  SPRITES.BILLBOARD06,  1.2);
 
-      for(n = 10 ; n < 200 ; n += 4 + Math.floor(n/100)) {
-        addSprite(n, SPRITES.PALM_TREE, 0.5 + Math.random()*0.5);
-        addSprite(n, SPRITES.PALM_TREE,   1 + Math.random()*2);
+      for (n = 10; n < 200; n += 4 + Math.floor(n / 100)) {
+        addSprite(n, SPRITES.PALM_TREE, 0.5 + Math.random() * 0.5);
+        addSprite(n, SPRITES.PALM_TREE,   1 + Math.random() * 2);
       }
 
-      for(n = 250 ; n < 1000 ; n += 5) {
-        addSprite(n,     SPRITES.COLUMN, 1.1);
+      for (n = 250; n < 1000; n += 5) {
+        addSprite(n,                       SPRITES.COLUMN, 1.1);
         addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Math.random() * 2));
         addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Math.random() * 2));
       }
 
-      for(n = 200 ; n < segments.length ; n += 3) {
-        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Math.random() * 5));
+      for (n = 200; n < segmentCount; n += 3) {
+        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1, -1]) * (2 + Math.random() * 5));
       }
 
       var side, sprite, offset;
-      for(n = 1000 ; n < (segments.length-50) ; n += 100) {
-        side      = Util.randomChoice([1, -1]);
+      for (n = 1000; n < (segmentCount - 50); n += 100) {
+        side = Util.randomChoice([1, -1]);
         addSprite(n + Util.randomInt(0, 50), Util.randomChoice(SPRITES.BILLBOARDS), -side);
-        for(i = 0 ; i < 20 ; i++) {
+        for (i = 0; i < 20; i++) {
           sprite = Util.randomChoice(SPRITES.PLANTS);
           offset = side * (1.5 + Math.random());
           addSprite(n + Util.randomInt(0, 50), sprite, offset);
         }
-          
       }
-
     }
 
     function resetCars() {
-      cars = [];
-      var n, car, segment, offset, z, sprite, speed;
-      for (var n = 0 ; n < totalCars ; n++) {
-        offset = Math.random() * Util.randomChoice([-0.8, 0.8]);
-        z      = Math.floor(Math.random() * segments.length) * segmentLength;
-        sprite = Util.randomChoice(SPRITES.CARS);
-        speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
-        car = { offset: offset, z: z, sprite: sprite, speed: speed };
-        segment = findSegment(car.z);
+      // Clear existing cars from all segments cleanly
+      for (var s = 0; s < segmentCount; s++) {
+        segments[s].cars.length = 0;
+      }
+      cars.length = 0;
+
+      if (totalCars <= 0) return;
+
+      var n, car, segment, offset, z, sprite, carSpeed;
+      for (n = 0; n < totalCars; n++) {
+        offset   = Math.random() * Util.randomChoice([-0.8, 0.8]);
+        z        = Math.floor(Math.random() * segmentCount) * segmentLength;
+        sprite   = Util.randomChoice(SPRITES.CARS);
+        carSpeed = maxSpeed / 4 + Math.random() * maxSpeed / (sprite === SPRITES.SEMI ? 4 : 2);
+        car      = { offset: offset, z: z, sprite: sprite, speed: carSpeed, percent: 0 };
+        segment  = findSegment(car.z);
         segment.cars.push(car);
         cars.push(car);
       }
@@ -616,7 +867,9 @@
         { keys: [KEY.LEFT,  KEY.A], mode: 'up',   action: function() { keyLeft   = false; } },
         { keys: [KEY.RIGHT, KEY.D], mode: 'up',   action: function() { keyRight  = false; } },
         { keys: [KEY.UP,    KEY.W], mode: 'up',   action: function() { keyFaster = false; } },
-        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } }
+        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } },
+        { keys: [67],               mode: 'down', action: toggleControlsPanel }, // 'C' key toggles GUI
+        { keys: [84],               mode: 'down', action: toggleTraffic }        // 'T' key toggles Cars
       ],
       ready: function(images) {
         background = images[0];
@@ -638,49 +891,89 @@
       fogDensity             = Util.toInt(options.fogDensity,     fogDensity);
       fieldOfView            = Util.toInt(options.fieldOfView,    fieldOfView);
       segmentLength          = Util.toInt(options.segmentLength,  segmentLength);
+      invSegLength           = 1 / segmentLength;
       rumbleLength           = Util.toInt(options.rumbleLength,   rumbleLength);
-      cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
+      cameraDepth            = 1 / Math.tan((fieldOfView / 2) * Math.PI / 180);
       playerZ                = (cameraHeight * cameraDepth);
-      resolution             = height/480;
+      resolution             = height / 480;
+
+      if (options.totalCars !== undefined) {
+        totalCars = Util.toInt(options.totalCars, totalCars);
+        if (totalCars > 0) savedCarCount = totalCars;
+        if (segments.length > 0) resetCars();
+      }
+
       refreshTweakUI();
 
-      if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
-        resetRoad(); // only rebuild road when necessary
+      if ((segments.length === 0) || (options.segmentLength) || (options.rumbleLength))
+        resetRoad();
     }
 
     //=========================================================================
     // TWEAK UI HANDLERS
     //=========================================================================
 
-    Dom.on('resolution', 'change', function(ev) {
-      var w, h, ratio;
-      switch(ev.target.options[ev.target.selectedIndex].value) {
-        case 'fine':   w = 1280; h = 960;  ratio=w/width; break;
-        case 'high':   w = 1024; h = 768;  ratio=w/width; break;
-        case 'medium': w = 640;  h = 480;  ratio=w/width; break;
-        case 'low':    w = 480;  h = 360;  ratio=w/width; break;
+    function toggleControlsPanel() {
+      var panel = Dom.get('controls');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
       }
-      reset({ width: w, height: h })
+    }
+
+    function toggleTraffic() {
+      if (totalCars > 0) {
+        savedCarCount = totalCars;
+        reset({ totalCars: 0 });
+      } else {
+        reset({ totalCars: savedCarCount || 200 });
+      }
+    }
+
+    Dom.on('toggle-gui-btn', 'click', function(ev) { Dom.blur(ev); toggleControlsPanel(); });
+    Dom.on('toggleCarsBtn',  'click', function(ev) { Dom.blur(ev); toggleTraffic(); });
+
+    Dom.on('resolution', 'change', function(ev) {
+      var w, h;
+      switch(ev.target.options[ev.target.selectedIndex].value) {
+        case 'fine':   w = 1280; h = 960; break;
+        case 'high':   w = 1024; h = 768; break;
+        case 'medium': w = 640;  h = 480; break;
+        case 'low':    w = 480;  h = 360; break;
+      }
+      reset({ width: w, height: h });
       Dom.blur(ev);
     });
 
-    Dom.on('lanes',          'change', function(ev) { Dom.blur(ev); reset({ lanes:         ev.target.options[ev.target.selectedIndex].value }); });
-    Dom.on('roadWidth',      'change', function(ev) { Dom.blur(ev); reset({ roadWidth:     Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-    Dom.on('cameraHeight',   'change', function(ev) { Dom.blur(ev); reset({ cameraHeight:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-    Dom.on('drawDistance',   'change', function(ev) { Dom.blur(ev); reset({ drawDistance:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-    Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); reset({ fieldOfView:   Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-    Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
+    Dom.on('lanes',        'change', function(ev) { Dom.blur(ev); reset({ lanes:        ev.target.options[ev.target.selectedIndex].value }); });
+    Dom.on('totalCars',    'change', function(ev) { Dom.blur(ev); reset({ totalCars:    Util.limit(Util.toInt(ev.target.value), 0, 200) }); });
+    Dom.on('roadWidth',    'change', function(ev) { Dom.blur(ev); reset({ roadWidth:    Util.limit(Util.toInt(ev.target.value), 500, 3000) }); });
+    Dom.on('cameraHeight', 'change', function(ev) { Dom.blur(ev); reset({ cameraHeight: Util.limit(Util.toInt(ev.target.value), 500, 5000) }); });
+    Dom.on('drawDistance', 'change', function(ev) { Dom.blur(ev); reset({ drawDistance: Util.limit(Util.toInt(ev.target.value), 100, 500) }); });
+    Dom.on('fieldOfView',  'change', function(ev) { Dom.blur(ev); reset({ fieldOfView:  Util.limit(Util.toInt(ev.target.value), 80, 140) }); });
+    Dom.on('fogDensity',   'change', function(ev) { Dom.blur(ev); reset({ fogDensity:   Util.limit(Util.toInt(ev.target.value), 0, 50) }); });
 
     function refreshTweakUI() {
-      Dom.get('lanes').selectedIndex = lanes-1;
-      Dom.get('currentRoadWidth').innerHTML      = Dom.get('roadWidth').value      = roadWidth;
-      Dom.get('currentCameraHeight').innerHTML   = Dom.get('cameraHeight').value   = cameraHeight;
-      Dom.get('currentDrawDistance').innerHTML   = Dom.get('drawDistance').value   = drawDistance;
-      Dom.get('currentFieldOfView').innerHTML    = Dom.get('fieldOfView').value    = fieldOfView;
-      Dom.get('currentFogDensity').innerHTML     = Dom.get('fogDensity').value     = fogDensity;
-    }
+      Dom.get('lanes').selectedIndex           = lanes - 1;
+      Dom.get('currentTotalCars').innerHTML    = Dom.get('totalCars').value    = totalCars;
+      Dom.get('currentRoadWidth').innerHTML    = Dom.get('roadWidth').value    = roadWidth;
+      Dom.get('currentCameraHeight').innerHTML = Dom.get('cameraHeight').value = cameraHeight;
+      Dom.get('currentDrawDistance').innerHTML = Dom.get('drawDistance').value = drawDistance;
+      Dom.get('currentFieldOfView').innerHTML  = Dom.get('fieldOfView').value  = fieldOfView;
+      Dom.get('currentFogDensity').innerHTML   = Dom.get('fogDensity').value   = fogDensity;
 
-    //=========================================================================
+      var btn = Dom.get('toggleCarsBtn');
+      if (totalCars === 0) {
+        btn.innerHTML = 'Restore Cars (' + (savedCarCount || 200) + ')';
+        btn.style.borderColor = '#f9c80e';
+        btn.style.color = '#f9c80e';
+      } else {
+        btn.innerHTML = 'Remove All Cars';
+        btn.style.borderColor = '#05d9e8';
+        btn.style.color = '#05d9e8';
+      }
+    }
 
   </script>
 
